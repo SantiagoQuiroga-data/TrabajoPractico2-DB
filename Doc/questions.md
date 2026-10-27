@@ -1,19 +1,54 @@
-1. 
-Un alquiler involucra dos momentos fisicos o geograficos distintos en el ciclo de vida del servicio: el punto de inicio (donde el cliente retira el auto) y el punto de finalizacion (donde lo entrega). Ambas acciones pueden ocurrir en la misma sucursal o en sucursales diferentes. Por ende, la tabla ALQUILERES necesita dos vias de conexion independientes con la tabla SUCURSALES.
+# Respuestas sobre el Modelo de Datos de Alquiler de Vehículos
 
-Tipo de relacion: Representa dos relaciones independientes de Uno a Muchos (1:N) entre SUCURSALES y ALQUILERES. Una sucursal puede ser la sucursal de retiro de muchos alquileres y tambien la de devolucion de muchos alquileres.
+---
 
-2. 
-Debe evaluar la regla de Integridad Referencial configurada en la clave foranea para evitar dejar registros "huerfanos" (vehiulos haciendo referencia a una categoria inexistente)
-Lo idea seria usar RESTRICT o SET NULL, pero si debo elegir una seria RESTRICT ya que impide bloquear o eliminar la categoria mientas existan vehiculos. SET NULL genera que si se elimina categoria se actualiza a null la clave foranea de los vehiculos. Teniendo en cuenta eso RESTRICT es una opcion mas viable
+### 1. Relación entre Alquileres y Sucursales
 
-3.
- Para aplicar la Tercera Forma Normal (3FN) y evitar redundancia de datos. Genera una consistencia de datos, ahorro de espacio y atributos centralizados
+Un alquiler involucra dos momentos físicos o geográficos distintos en el ciclo de vida del servicio: el punto de inicio (donde el cliente retira el auto) y el punto de finalización (donde lo entrega). Ambas acciones pueden ocurrir en la misma sucursal o en sucursales diferentes. Por ende, la tabla `ALQUILERES` necesita dos vías de conexión independientes con la tabla `SUCURSALES`.
 
-4. 
-Tipo de relacion: Es una relacion de Uno a Muchos (1:N) (desde SUCURSALES hacia EMPLEADOS).
- Una sucursal fisica emplea a muchos empleados, pero en un modelo administrativo estandar, cada empleado pertenece o esta asignado formalmente a una sola sucursal a la vez (lo que se refleja mediante el campo ID_SUCURSAL como clave foranea dentro de la tabla EMPLEADOS).
+* **Tipo de relación:** Representa dos relaciones independientes de **Uno a Muchos (1:N)** entre `SUCURSALES` y `ALQUILERES`. 
+* **Justificación:** Una sucursal puede ser la sucursal de retiro de muchos alquileres y también la sucursal de devolución de muchos alquileres.
 
-5.
- Porque las revisiones de 'salida' (check-out) y 'entrada' (check-in) comparten exactamente la misma estructura de datos (mismos atributos: fecha, hora, estado del tanque, kilometraje, detalles/daños, empleado a cargo, id_alquiler).
-Evita la duplicacion de estructuras, simplifica las consultas y es mas escalables a futuro
+---
+
+### 2. Eliminación de una Categoría asociada a Vehículos
+
+La base de datos debe evaluar la regla de **Integridad Referencial** configurada en la clave foránea para evitar dejar registros "huérfanos" (vehículos haciendo referencia a una categoría inexistente).
+
+* **Comportamiento recomendado:** Lo ideal sería definir la restricción según las reglas del negocio:
+  * **`RESTRICT` / `NO ACTION` (Opción más viable):** Impide la eliminación de la categoría mientras existan vehículos asociados a ella, protegiendo la integridad de la flota y los datos históricos.
+  * **`SET NULL`:** Si se elimina la categoría, se actualiza automáticamente a `NULL` la clave foránea de los vehículos afectados.
+
+* **Conclusión:** La opción `RESTRICT` es la más aconsejable para evitar incoherencias en el inventario.
+
+---
+
+### 3. Normalización de Categorías y Tercera Forma Normal (3FN)
+
+El diseño separa el autor o la categoría en una tabla independiente para aplicar la **Tercera Forma Normal (3FN)** y evitar la redundancia de datos.
+
+* **Ventajas:**
+  * **Consistencia de datos:** Evita errores tipográficos al repetir información en múltiples registros.
+  * **Ahorro de espacio:** Almacena el texto descriptivo una sola vez y lo vincula mediante claves numéricas (IDs).
+  * **Atributos centralizados:** Facilita la actualización de la información centralizada en un único punto.
+
+---
+
+### 4. Relación entre Sucursales y Empleados
+
+* **Tipo de relación:** Es una relación de **Uno a Muchos (1:N)** desde `SUCURSALES` hacia `EMPLEADOS`.
+* **Justificación:** Una sucursal física emplea a muchos empleados, pero en un modelo administrativo estándar, cada empleado pertenece o está asignado formalmente a una sola sucursal a la vez (lo que se refleja mediante el campo `ID_SUCURSAL` como clave foránea dentro de la tabla `EMPLEADOS`).
+
+---
+
+### 5. Consolidación de Revisiones (Check-in / Check-out)
+
+Las revisiones de *salida* (check-out) y *entrada* (check-in) se unifican en una sola estructura debido a que comparten exactamente la misma naturaleza y los mismos atributos de datos:
+* Fecha y hora
+* Estado del tanque de combustible
+* Kilometraje
+* Detalles o daños del vehículo
+* Empleado a cargo
+* `ID_ALQUILER`
+
+* **Ventajas:** Evita la duplicación de tablas y esquemas, simplifica la escritura de consultas SQL y hace que el modelo sea más escalable a futuro.
